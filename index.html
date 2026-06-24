@@ -482,28 +482,29 @@ function bLeads(){
 // ── TEMPLATES ────────────────────────────────────────────────────
 function bTemplates(){
   return`<div class="ct">
-  <div class="info-tip">Use [nome], [produto], [empresa], [data] para personalizar automaticamente.</div>
-  ${S.etapas.map(e=>`<div class="tpl-card">
-    <div class="tpl-hdr" onclick="S.tplAberto=S.tplAberto===e.id?null:e.id;R()">
-      <div class="tpl-cor" style="background:${e.cor}"></div>
-      <div class="tpl-nome">${e.nome}</div>
-      <span style="font-size:14px;color:var(--tx3)">${S.tplAberto===e.id?'▲':'▼'}</span>
+  <div class="info-tip">Use <strong>[nome]</strong>, <strong>[produto]</strong>, <strong>[empresa]</strong>, <strong>[data]</strong> para personalizar automaticamente a mensagem para cada cliente.</div>
+  ${S.etapas.map(e=>`
+  <div class="tpl-card" style="margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:.5px solid var(--bd)">
+      <div style="width:10px;height:10px;border-radius:50%;background:${e.cor};flex-shrink:0"></div>
+      <div style="font-size:13px;font-weight:700;flex:1">${e.nome}</div>
+      <span style="font-size:10px;color:var(--tx3)">alerta: ${e.dias}d</span>
     </div>
-    ${S.tplAberto===e.id?`<div class="tpl-body">
+    <div style="padding:12px 14px">
       <div class="fg">
-        <label class="fl">Mensagem template</label>
-        <textarea id="tpl-${e.id}" rows="5">${e.template||''}</textarea>
+        <label class="fl">💬 Mensagem — edite como quiser</label>
+        <textarea id="tpl-${e.id}" rows="5" style="font-size:12px;line-height:1.6">${e.template||''}</textarea>
       </div>
       <div class="fg">
-        <label class="fl">Checklist (1 item por linha)</label>
-        <textarea id="chk-${e.id}" rows="4">${(e.checklist||[]).join('\n')}</textarea>
+        <label class="fl">✅ Checklist da etapa (1 item por linha)</label>
+        <textarea id="chk-${e.id}" rows="4" style="font-size:12px;line-height:1.6">${(e.checklist||[]).join('\n')}</textarea>
       </div>
-      <div class="fg">
-        <label class="fl">Alerta de follow-up (dias sem contato)</label>
-        <input id="dias-${e.id}" type="number" min="1" max="30" value="${e.dias||3}" style="width:80px"/>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <label class="fl" style="margin:0;white-space:nowrap">⏰ Dias sem contato para alerta</label>
+        <input id="dias-${e.id}" type="number" min="1" max="30" value="${e.dias||3}" style="width:60px;text-align:center"/>
       </div>
-      <button class="btn btn-p btn-sm" onclick="salvarTemplate(${e.id})">Salvar</button>
-    </div>`:''}
+      <button class="btn btn-p btn-sm" onclick="salvarTemplate(${e.id})">💾 Salvar ${e.nome}</button>
+    </div>
   </div>`).join('')}
 </div>`;
 }
