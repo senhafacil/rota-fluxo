@@ -198,7 +198,7 @@ const DEFAULT_ETAPAS=[
 function gLS(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
 function sLS(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
-let S={
+var S={
   view:'pipeline',
   etapaAtiva:null,
   setupDone:gLS('rota-setup',false),
@@ -253,6 +253,12 @@ function renderTpl(tpl,cli){
 function getCli(){return S.clientes.find(c=>c.id===S.cliId);}
 
 // ── RENDER ───────────────────────────────────────────────────────
+// Helpers acessíveis nos onclick inline
+window.setAba=function(id){S.etapaAtiva=id;R();};
+window.toggleTpl=function(id){S.tplAberto=S.tplAberto===id?null:id;R();};
+window.irAlertas=function(){S.view='clientes';S.busca='alerta';R();};
+window.limparBusca=function(){S.busca='';R();};
+
 function R(){document.getElementById('app').innerHTML=H();}
 
 function H(){
@@ -335,7 +341,7 @@ function bPipeline(){
   ${alertas.length?`<div class="alert-ban">
     <span>⚠️</span>
     <span class="alert-ban-txt">${alertas.length} cliente${alertas.length>1?'s precisam':'precisa'} de follow-up urgente</span>
-    <button class="btn btn-xs btn-rd" onclick="sv('clientes');S.busca='alerta';R()">Ver</button>
+    <button class="btn btn-xs btn-rd" onclick="irAlertas()">Ver</button>
   </div>`:''}
   <div class="stage-tabs">
     ${S.etapas.map(e=>{
@@ -343,7 +349,7 @@ function bPipeline(){
       const al=S.clientes.filter(c=>c.etapa_id===e.id&&emAlerta(c)).length;
       return`<button class="stab ${S.etapaAtiva===e.id?'on':''}"
         style="${S.etapaAtiva===e.id?`background:${e.cor}`:'color:'+e.cor+';border-color:'+e.cor+'33'}"
-        onclick="S.etapaAtiva=${e.id};R()">
+        onclick="setAba(${e.id})">
         ${e.nome} <span class="stab-count">${n}${al?` ⚠${al}`:''}</span>
       </button>`;
     }).join('')}
@@ -397,7 +403,7 @@ function bClientes(){
     <span>🔍</span>
     <input placeholder="Buscar por nome, telefone, segmento..." value="${S.busca==='alerta'?'':S.busca}"
       oninput="S.busca=this.value;R()"/>
-    ${S.busca?`<button class="btn-ghost" style="font-size:16px" onclick="S.busca='';R()">✕</button>`:''}
+    ${S.busca?`<button class="btn-ghost" style="font-size:16px" onclick="limparBusca()">✕</button>`:''}
   </div>
   <div style="font-size:12px;color:var(--tx3);margin-bottom:10px">${lista.length} cliente${lista.length!==1?'s':''}</div>
   ${lista.length===0?`<div class="empty"><div class="empty-ico">👥</div>${S.busca?'Nenhum resultado para "'+S.busca+'"':'Nenhum cliente ainda'}</div>`:
