@@ -224,6 +224,15 @@ function save(){
   sLS('rota-nid',S.nid);
 }
 
+window.sairDaConta=function(){
+  if(!confirm('Sair da conta?\nOs dados ficam salvos para quando você voltar.')) return;
+  // Salva tudo antes de sair
+  save();
+  // Apaga só a flag de setup — próximo acesso vai pedir configuração
+  localStorage.removeItem('rota-setup');
+  location.reload();
+};
+
 // ── HELPERS ──────────────────────────────────────────────────────
 function nid(){return ++S.nid;}
 function hoje(){return new Date().toISOString();}
@@ -546,6 +555,15 @@ function bConfigView(){
       ${S.clientes.length} clientes · ${S.leads.filter(l=>!l.importado).length} leads pendentes
     </div>
     <button class="btn btn-xs btn-rd" onclick="if(confirm('Zerar todos os dados?')){S.clientes=[];S.leads=[];save();R()}">Limpar dados</button>
+  </div>
+
+  <div class="sec-tit" style="margin-top:20px">Conta</div>
+  <div class="card card-sm">
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.5">
+      Sair libera a plataforma para outra pessoa entrar com seus próprios dados.<br>
+      <span style="color:var(--rd);font-weight:600">Os dados desta conta não são apagados.</span>
+    </div>
+    <button class="btn btn-sm" style="background:var(--tx);color:white;border-color:var(--tx)" onclick="sairDaConta()">↩ Sair da conta</button>
   </div>
 </div>`;
 }
