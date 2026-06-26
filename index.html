@@ -200,14 +200,12 @@ function sLS(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
 const ROTA_CODE='vanessa2026'; // código da Vanessa
 // Usuários com código próprio: adicione aqui novos usuários
-const ROTA_USERS=gLS('rota-users',[
-  // {nome:'Fulana', code:'fulana123', config:{negocio:'Fulana Estética',segmento:'Estética'}}
-]);
-
 var S={
   view:'pipeline',
   role:gLS('rota-role','login'), // 'login' | 'admin' | 'user'
+  users:gLS('rota-users',[]),   // usuários cadastrados
   loginErr:'',
+  currentUser:null,
   etapaAtiva:null,
   setupDone:gLS('rota-setup',false),
   config:gLS('rota-config',{negocio:'',segmento:''}),
@@ -230,6 +228,7 @@ function save(){
   sLS('rota-clientes',S.clientes);
   sLS('rota-leads',S.leads);
   sLS('rota-nid',S.nid);
+  sLS('rota-users',S.users);
 }
 
 // ── LOGIN / LOGOUT ────────────────────────────────────────────
@@ -265,7 +264,7 @@ window.doLoginRota=function(){
     S.role='admin';S.loginErr='';
     sLS('rota-role','admin');R();return;
   }
-  const usr=ROTA_USERS.find(u=>u.code&&u.code.toLowerCase()===code);
+  const usr=S.users.find(u=>u.code&&u.code.toLowerCase()===code);
   if(usr){
     S.role='user';S.loginErr='';
     // Carrega dados do usuário específico
@@ -287,6 +286,26 @@ window.doLoginRota=function(){
     R();return;
   }
   S.loginErr='Código inválido.';R();
+};
+
+window.adicionarUsuario=function(){
+  const nome=(document.getElementById('nu-nome')?.value||'').trim();
+  const code=(document.getElementById('nu-code')?.value||'').trim().toLowerCase();
+  if(!nome||!code){alert('Preencha nome e código.');return;}
+  if(code===S.config.code||code==='vanessa2026'){alert('Esse código já está em uso.');return;}
+  if(S.users.find(u=>u.code===code)){alert('Já existe um usuário com esse código.');return;}
+  S.users.push({nome,code});
+  sLS('rota-users',S.users);
+  R();
+};
+
+window.removerUsuario=function(idx){
+  const u=S.users[idx];
+  if(!u)return;
+  if(!confirm('Remover '+u.nome+'? Os dados dele ficam salvos no dispositivo.'))return;
+  S.users.splice(idx,1);
+  sLS('rota-users',S.users);
+  R();
 };
 
 window.doLogoutRota=function(){
@@ -598,6 +617,26 @@ function bTemplates(){
 // ── CONFIG ───────────────────────────────────────────────────────
 function bConfigView(){
   return`<div class="ct">
+  ${S.role==='admin'?`
+  <div class="sec-tit">Usuários</div>
+  <div class="card card-sm" style="padding:14px">
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:12px">Cada usuário tem dados e pipeline próprios. Você entrega o código para eles acessarem.</div>
+    ${S.users.map((u,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:.5px solid var(--bd)">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--tx)">${u.nome}</div>
+        <div style="font-size:11px;color:var(--tx3);font-family:monospace">${u.code}</div>
+      </div>
+      <button onclick="removerUsuario(${i})" style="font-size:18px;color:var(--rd);background:none;border:none;cursor:pointer;padding:2px 6px">✕</button>
+    </div>`).join('')}
+    ${S.users.length===0?'<div style="font-size:12px;color:var(--tx3);text-align:center;padding:8px 0">Nenhum usuário cadastrado ainda.</div>':''}
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+      <input id="nu-nome" placeholder="Nome do usuário" style="font-size:13px"/>
+      <input id="nu-code" placeholder="Código de acesso (ex: paula123)" style="font-size:13px;font-family:monospace"/>
+      <button onclick="adicionarUsuario()" class="btn btn-p btn-sm" style="width:100%;justify-content:center">+ Adicionar usuário</button>
+    </div>
+  </div>
+  `:''}
   <div class="sec-tit">Negócio</div>
   <div class="card">
     <div class="fg"><label class="fl">Nome do negócio</label>
