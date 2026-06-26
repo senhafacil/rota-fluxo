@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -181,13 +182,13 @@ const DEFAULT_ETAPAS=[
    template:'[nome], para te ajudar da melhor forma, preciso entender algumas informações.\n\nPoderia me responder rapidinho:\n\n1. Qual é a sua maior necessidade hoje?\n2. Você já tem algo parecido?\n3. Qual é o seu prazo para decidir?',
    checklist:['Coletar dados completos (nome, contato, perfil)','Identificar necessidade e urgência','Verificar poder de decisão','Registrar informações no sistema']},
   {id:3,nome:'Proposta',cor:'#9A6C00',dias:3,
-   template:'[nome], preparei as melhores opções para o seu perfil!\n\nBaseado no que você me contou, selecionei [X] alternativas que atendem exatamente o que você precisa.\n\nPosso te apresentar os detalhes? Quando seria um bom momento?',
+   template:'[nome], preparei as melhores opções para o seu perfil!\n\nBaseado no que você me contou, selecionei algumas alternativas que atendem exatamente o que você precisa.\n\nPosso te apresentar os detalhes? Quando seria um bom momento?',
    checklist:['Preparar proposta personalizada','Apresentar opções e coberturas','Comparar vantagens e desvantagens','Registrar dúvidas e objeções']},
   {id:4,nome:'Follow-up',cor:'#C0392B',dias:2,
    template:'[nome], oi! 👋\n\nPassei para ver se você teve a oportunidade de analisar as opções que conversamos.\n\nTenho algumas novidades que podem te interessar. Posso te ligar em [data]?',
    checklist:['Verificar se analisou a proposta','Identificar e tratar objeções','Apresentar novas alternativas se necessário','Definir próximo passo com prazo']},
   {id:5,nome:'Fechamento',cor:'#1A7A4A',dias:2,
-   template:'Ótimo, [nome]! Fico feliz com a sua decisão! 🎉\n\nVamos finalizar o processo. Preciso de algumas informações:\n\n[lista de documentos necessários]\n\nAssim que tiver tudo, dou sequência imediatamente!',
+   template:'Ótimo, [nome]! Fico feliz com a sua decisão! 🎉\n\nVamos finalizar o processo. Preciso de algumas informações para dar sequência.\n\nAssim que tiver tudo, dou andamento imediatamente!',
    checklist:['Confirmar decisão e escolha','Solicitar documentos necessários','Preencher proposta e formulários','Confirmar dados e assinar']},
   {id:6,nome:'Pós-venda',cor:'#0F4C75',dias:15,
    template:'[nome], oi! Como está sendo a experiência? 😊\n\nPassei para ver se está tudo certinho e se posso te ajudar com alguma coisa.\n\nLembre-se: estou à disposição para qualquer dúvida!',
@@ -226,9 +227,7 @@ function save(){
 
 window.sairDaConta=function(){
   if(!confirm('Sair da conta?\nOs dados ficam salvos para quando você voltar.')) return;
-  // Salva tudo antes de sair
   save();
-  // Apaga só a flag de setup — próximo acesso vai pedir configuração
   localStorage.removeItem('rota-setup');
   location.reload();
 };
@@ -262,7 +261,6 @@ function renderTpl(tpl,cli){
 function getCli(){return S.clientes.find(c=>c.id===S.cliId);}
 
 // ── RENDER ───────────────────────────────────────────────────────
-// Helpers acessíveis nos onclick inline
 window.setAba=function(id){S.etapaAtiva=id;R();};
 window.toggleTpl=function(id){S.tplAberto=S.tplAberto===id?null:id;R();};
 window.irAlertas=function(){S.view='clientes';S.busca='alerta';R();};
@@ -320,10 +318,10 @@ function bSetup(){
   <div class="setup-sub">Configure seu sistema em 2 minutos<br>e comece a organizar seus clientes agora.</div>
   <div class="setup-card">
     <div class="fg"><label class="fl">Nome do seu negócio</label>
-      <input id="s-neg" placeholder="Ex: Paula Consultoria em Saúde" value="${S.config.negocio}"/>
+      <input id="s-neg" placeholder="Ex: Meu Negócio" value="${S.config.negocio}"/>
     </div>
     <div class="fg"><label class="fl">Segmento / produto</label>
-      <input id="s-seg" placeholder="Ex: Planos de Saúde" value="${S.config.segmento}"/>
+      <input id="s-seg" placeholder="Ex: Meu produto ou serviço" value="${S.config.segmento}"/>
     </div>
     <div style="margin-bottom:10px">
       <div class="fl">Etapas do seu processo</div>
@@ -378,7 +376,6 @@ function bPipeline(){
 function bCliCard(c){
   const et=S.etapas.find(e=>e.id===c.etapa_id);
   const al=emAlerta(c);
-  const d=dias(c.data_ult_acao||c.data_entrada);
   return`<div class="cli-card ${al?'alerta':''}" onclick="abrirCli(${c.id})">
   <div class="rwb">
     <div>
@@ -449,7 +446,7 @@ function bLeads(){
   <div class="sec-tit">Importar leads</div>
   <div class="info-tip">Cole aqui uma lista de leads (um por linha).<br>Formato aceito: Nome, Telefone, Segmento (separados por vírgula, ponto e vírgula ou tab)</div>
   <div class="fg">
-    <textarea id="leads-txt" rows="5" placeholder="Ana Lima, (21) 99999-1111, Médica&#10;João Silva, (21) 88888-2222, Empresário&#10;Maria Costa, (11) 77777-3333&#10;..."></textarea>
+    <textarea id="leads-txt" rows="5" placeholder="Nome do Lead, (11) 99999-0000, Segmento&#10;..."></textarea>
   </div>
   <button class="btn btn-p btn-sm" onclick="parsarLeads()">Processar lista →</button>
 
@@ -581,10 +578,10 @@ function bModalNovoCli(){
   <div class="modal">
     <div class="modal-drag"></div>
     <div class="mtt">Novo cliente</div>
-    <div class="fg"><label class="fl">Nome completo *</label><input id="nc-nome" placeholder="Ana Lima" autofocus/></div>
+    <div class="fg"><label class="fl">Nome completo *</label><input id="nc-nome" placeholder="Nome do cliente" autofocus/></div>
     <div class="g2">
-      <div class="fg"><label class="fl">Telefone</label><input id="nc-tel" placeholder="(21) 99999-9999" type="tel"/></div>
-      <div class="fg"><label class="fl">Segmento / perfil</label><input id="nc-seg" placeholder="Médica, Empresário..."/></div>
+      <div class="fg"><label class="fl">Telefone</label><input id="nc-tel" placeholder="(11) 99999-9999" type="tel"/></div>
+      <div class="fg"><label class="fl">Segmento / perfil</label><input id="nc-seg" placeholder="Segmento..."/></div>
     </div>
     <div class="fg"><label class="fl">Etapa inicial</label>
       <select id="nc-etapa">
@@ -838,6 +835,7 @@ window.importarSelecionados=()=>{
   if(!S.leadsSel.length){alert('Selecione os leads a importar.');return;}
   const etapaId=parseInt(document.getElementById('leads-etapa')?.value)||S.etapas[0]?.id;
   const et=S.etapas.find(e=>e.id===etapaId);
+  const qtd=S.leadsSel.length;
   S.leadsSel.forEach(lid=>{
     const lead=S.leads.find(l=>l.id===lid);
     if(!lead)return;
@@ -850,7 +848,9 @@ window.importarSelecionados=()=>{
     S.leads=S.leads.map(l=>l.id===lid?{...l,importado:true}:l);
   });
   S.leadsSel=[];
-  const qtd=S.leadsSel.length;S.leadsSel=[];save();alert(`${qtd} lead${qtd!==1?'s':''} importado${qtd!==1?'s':''}! Veja no Pipeline.`);R();
+  save();
+  alert(`${qtd} lead${qtd!==1?'s':''} importado${qtd!==1?'s':''}! Veja no Pipeline.`);
+  R();
 };
 window.removerLead=(id)=>{S.leads=S.leads.filter(l=>l.id!==id);save();R()};
 
