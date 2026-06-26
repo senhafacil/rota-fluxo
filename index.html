@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -170,6 +171,61 @@ textarea{resize:vertical;min-height:80px;line-height:1.5}
 <div class="app" id="app"></div>
 
 <script>
+// ── SUPABASE ─────────────────────────────────────────────────────
+const SUPA_URL = 'https://kzsospnvnrotgpquvliy.supabase.co';
+const SUPA_KEY = 'sb_publishable_D9fMdHocNzz_nkwhUmrwhw_6ifM0AUE';
+const SUPA_HDR = {'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+
+let USUARIO_LOGADO = null; // {login, nome, isAdmin}
+
+async function supaQ(tabela, filtro=''){
+  try{
+    const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${filtro}`,{headers:SUPA_HDR});
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(e){return null;}
+}
+
+async function supaPost(tabela, dados, upsert=false){
+  try{
+    const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}`,{
+      method:'POST',
+      headers:{...SUPA_HDR,'Prefer': upsert?'resolution=merge-duplicates':'return=minimal'},
+      body:JSON.stringify(dados)
+    });
+    return r.ok;
+  }catch(e){return false;}
+}
+
+async function supaDelete(tabela, filtro){
+  try{
+    const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${filtro}`,{
+      method:'DELETE', headers:SUPA_HDR
+    });
+    return r.ok;
+  }catch(e){return false;}
+}
+
+async function carregarDadosRota(){
+  if(!USUARIO_LOGADO) return;
+  const rows = await supaQ('rota_dados',`login=eq.${USUARIO_LOGADO.login}&select=dados`);
+  if(rows && rows.length > 0 && rows[0].dados){
+    const d = rows[0].dados;
+    if(d.config) S.config = d.config;
+    if(d.etapas) S.etapas = d.etapas;
+    if(d.clientes) S.clientes = d.clientes;
+    if(d.leads) S.leads = d.leads;
+    if(d.nid) S.nid = d.nid;
+    S.setupDone = true;
+  }
+}
+
+async function salvarDadosRota(){
+  if(!USUARIO_LOGADO) return;
+  const dados = {config:S.config, etapas:S.etapas, clientes:S.clientes, leads:S.leads, nid:S.nid};
+  await supaPost('rota_dados', {login:USUARIO_LOGADO.login, dados, atualizado_em:new Date().toISOString()}, true);
+}
+
 // ── DEFAULTS ────────────────────────────────────────────────────
 const COR_ETAPAS=['#2D3180','#7B2F8A','#9A6C00','#C0392B','#1A7A4A','#0F4C75','#6B4226'];
 
@@ -195,41 +251,165 @@ const DEFAULT_ETAPAS=[
 ];
 
 // ── STATE ────────────────────────────────────────────────────────
-function gLS(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
-function sLS(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
-
 var S={
   view:'pipeline',
   etapaAtiva:null,
-  setupDone:gLS('rota-setup',false),
-  config:gLS('rota-config',{negocio:'',segmento:''}),
-  etapas:gLS('rota-etapas',DEFAULT_ETAPAS),
-  clientes:gLS('rota-clientes',[]),
-  leads:gLS('rota-leads',[]),
+  setupDone:false,
+  config:{negocio:'',segmento:''},
+  etapas:JSON.parse(JSON.stringify(DEFAULT_ETAPAS)),
+  clientes:[],
+  leads:[],
   modal:null,
   cliId:null,
   busca:'',
   leadsSel:[],
-  nid:gLS('rota-nid',100),
+  nid:100,
   tplAberto:null,
-  setupEtapa:0,
 };
 
 function save(){
-  sLS('rota-setup',S.setupDone);
-  sLS('rota-config',S.config);
-  sLS('rota-etapas',S.etapas);
-  sLS('rota-clientes',S.clientes);
-  sLS('rota-leads',S.leads);
-  sLS('rota-nid',S.nid);
+  salvarDadosRota();
 }
 
 window.sairDaConta=function(){
-  if(!confirm('Sair da conta?\nOs dados ficam salvos para quando você voltar.')) return;
-  save();
-  localStorage.removeItem('rota-setup');
-  location.reload();
+  if(!confirm('Sair da conta?')) return;
+  USUARIO_LOGADO = null;
+  S = {view:'pipeline',etapaAtiva:null,setupDone:false,config:{negocio:'',segmento:''},
+    etapas:JSON.parse(JSON.stringify(DEFAULT_ETAPAS)),clientes:[],leads:[],
+    modal:null,cliId:null,busca:'',leadsSel:[],nid:100};
+  R();
 };
+
+// ── LOGIN ─────────────────────────────────────────────────────────
+function bLogin(){
+  return`<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:var(--bg)">
+  <div style="width:64px;height:64px;background:linear-gradient(135deg,#7B2F8A,#2D1B69);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:white;margin:0 auto 16px">R</div>
+  <div style="font-size:22px;font-weight:800;color:var(--p);text-align:center;margin-bottom:6px">ROTA Fluxo</div>
+  <div style="font-size:13px;color:var(--tx3);text-align:center;margin-bottom:28px">por Vanessa de Oliveira · Mãe CEO</div>
+  <div style="background:var(--sf);border-radius:var(--r);padding:24px;width:100%;max-width:360px;border:.5px solid var(--bd2);box-shadow:0 4px 20px rgba(45,27,105,.1)">
+    <div style="font-size:16px;font-weight:800;color:var(--p);margin-bottom:18px;text-align:center">Entrar no sistema</div>
+    <div id="login-err" style="display:none;background:var(--rdf);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--rd);font-weight:600;margin-bottom:12px;text-align:center"></div>
+    <div class="fg"><label class="fl">Usuário</label>
+      <input id="login-user" placeholder="Seu usuário" autocomplete="username"
+        onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
+    </div>
+    <div class="fg"><label class="fl">Senha</label>
+      <input id="login-pass" type="password" placeholder="Sua senha" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')fazerLogin()"/>
+    </div>
+    <button class="btn btn-p" style="width:100%;justify-content:center;padding:11px;margin-top:4px" onclick="fazerLogin()">
+      Entrar →
+    </button>
+  </div>
+</div>`;
+}
+
+window.fazerLogin = async function(){
+  const login = document.getElementById('login-user')?.value.trim();
+  const senha  = document.getElementById('login-pass')?.value.trim();
+  const err    = document.getElementById('login-err');
+  if(!login||!senha){err.style.display='block';err.textContent='Preencha usuário e senha.';return;}
+
+  const btn = document.querySelector('.btn-p');
+  if(btn){btn.textContent='Entrando...';btn.disabled=true;}
+
+  const rows = await supaQ('rota_usuarios',`login=eq.${encodeURIComponent(login)}&senha=eq.${encodeURIComponent(senha)}&select=login,nome,senha`);
+
+  if(!rows || rows.length === 0){
+    err.style.display='block';
+    err.textContent='Usuário ou senha incorretos.';
+    if(btn){btn.textContent='Entrar →';btn.disabled=false;}
+    return;
+  }
+
+  USUARIO_LOGADO = {
+    login: rows[0].login,
+    nome:  rows[0].nome || rows[0].login,
+    isAdmin: rows[0].login === 'vanessa2026'
+  };
+
+  // Carrega dados do Supabase
+  await carregarDadosRota();
+  if(!S.setupDone) S.setupDone = !!S.config.negocio;
+  R();
+};
+
+// ── ADMIN PANEL ───────────────────────────────────────────────────
+function bAdmin(){
+  return`<div class="ct">
+  <div style="background:linear-gradient(135deg,#2D1B69,#7B2F8A);border-radius:var(--r);padding:16px;margin-bottom:16px;color:white">
+    <div style="font-size:14px;font-weight:800;margin-bottom:4px">👑 Painel Admin — Vanessa</div>
+    <div style="font-size:12px;opacity:.7">Gerencie os acessos das mentoradas</div>
+  </div>
+
+  <div class="sec-tit">Cadastrar nova mentorada</div>
+  <div class="card">
+    <div class="g2">
+      <div class="fg"><label class="fl">Nome</label><input id="adm-nome" placeholder="Nome da mentorada"/></div>
+      <div class="fg"><label class="fl">Login</label><input id="adm-login" placeholder="Ex: ana2024"/></div>
+    </div>
+    <div class="fg"><label class="fl">Senha</label><input id="adm-senha" placeholder="Senha de acesso"/></div>
+    <button class="btn btn-p btn-sm" onclick="cadastrarMentorada()">+ Cadastrar acesso</button>
+    <div id="adm-msg" style="display:none;margin-top:8px;font-size:12px;font-weight:600"></div>
+  </div>
+
+  <div class="sec-tit">Mentoradas cadastradas</div>
+  <div id="adm-lista">
+    <div style="text-align:center;color:var(--tx3);padding:20px;font-size:13px">Carregando...</div>
+  </div>
+
+  <div class="sec-tit" style="margin-top:20px">Minha conta</div>
+  <div class="card card-sm">
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:10px">Logada como <strong>${USUARIO_LOGADO?.nome}</strong></div>
+    <button class="btn btn-sm" onclick="sairDaConta()">↩ Sair</button>
+  </div>
+</div>`;
+}
+
+window.cadastrarMentorada = async function(){
+  const nome  = document.getElementById('adm-nome')?.value.trim();
+  const login = document.getElementById('adm-login')?.value.trim().toLowerCase().replace(/\s/g,'');
+  const senha = document.getElementById('adm-senha')?.value.trim();
+  const msg   = document.getElementById('adm-msg');
+  if(!nome||!login||!senha){msg.style.display='block';msg.style.color='var(--rd)';msg.textContent='Preencha todos os campos.';return;}
+
+  const ok = await supaPost('rota_usuarios',{login,senha,nome});
+  if(ok){
+    msg.style.display='block';msg.style.color='var(--gr)';
+    msg.textContent=`✓ ${nome} cadastrada! Login: ${login} / Senha: ${senha}`;
+    document.getElementById('adm-nome').value='';
+    document.getElementById('adm-login').value='';
+    document.getElementById('adm-senha').value='';
+    carregarListaMentoradas();
+  } else {
+    msg.style.display='block';msg.style.color='var(--rd)';msg.textContent='Erro ao cadastrar. Login pode já existir.';
+  }
+};
+
+async function carregarListaMentoradas(){
+  const lista = document.getElementById('adm-lista');
+  if(!lista) return;
+  const rows = await supaQ('rota_usuarios','select=login,nome,criado_em&order=criado_em.desc');
+  if(!rows||!rows.length){lista.innerHTML='<div style="text-align:center;color:var(--tx3);padding:16px;font-size:13px">Nenhuma mentorada ainda</div>';return;}
+  const mentoradas = rows.filter(r=>r.login!=='vanessa2026');
+  if(!mentoradas.length){lista.innerHTML='<div style="text-align:center;color:var(--tx3);padding:16px;font-size:13px">Nenhuma mentorada cadastrada ainda</div>';return;}
+  lista.innerHTML = mentoradas.map(r=>`
+    <div class="card card-sm" style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700">${r.nome}</div>
+        <div style="font-size:11px;color:var(--tx3)">Login: <strong>${r.login}</strong></div>
+      </div>
+      <button class="btn btn-xs btn-rd" onclick="excluirMentorada('${r.login}','${r.nome}')">Excluir</button>
+    </div>`).join('');
+}
+
+window.excluirMentorada = async function(login, nome){
+  if(!confirm(`Excluir acesso de ${nome}? Os dados dela também serão apagados.`)) return;
+  await supaDelete('rota_dados',`login=eq.${login}`);
+  await supaDelete('rota_usuarios',`login=eq.${login}`);
+  carregarListaMentoradas();
+};
+
 
 // ── HELPERS ──────────────────────────────────────────────────────
 function nid(){return ++S.nid;}
@@ -268,6 +448,11 @@ window.limparBusca=function(){S.busca='';R();};
 function R(){document.getElementById('app').innerHTML=H();}
 
 function H(){
+  if(!USUARIO_LOGADO) return bLogin();
+  if(USUARIO_LOGADO.isAdmin && S.view==='admin') {
+    setTimeout(carregarListaMentoradas, 100);
+    return `<div class="hdr"><div class="logo"><div class="logo-r">R</div><div><div class="logo-txt">ROTA Fluxo</div><div class="logo-sub">por Vanessa de Oliveira · Mãe CEO</div></div></div><div class="hdr-right">Admin</div></div><div class="app">${bAdmin()}</div>${bBottomNav()}`;
+  }
   if(!S.setupDone)return bSetup();
   const modal=S.modal?bModal():'';
   return`${modal}
@@ -279,7 +464,7 @@ function H(){
       <div class="logo-sub">por Vanessa de Oliveira · Mãe CEO</div>
     </div>
   </div>
-  <div class="hdr-right">${S.config.segmento||''}</div>
+  <div class="hdr-right">${S.config.segmento||USUARIO_LOGADO?.nome||''}</div>
 </div>
 <div class="app">
   ${S.view==='pipeline'?bPipeline():S.view==='clientes'?bClientes():S.view==='leads'?bLeads():S.view==='templates'?bTemplates():bConfigView()}
@@ -303,9 +488,14 @@ function bBottomNav(){
     <button class="bnav-item ${S.view==='templates'?'on':''}" onclick="sv('templates')">
       <span class="bnav-ico">💬</span><span class="bnav-lbl">Templates</span>
     </button>
-    <button class="bnav-item ${S.view==='cfg'?'on':''}" onclick="sv('cfg')">
-      <span class="bnav-ico">⚙️</span><span class="bnav-lbl">Config</span>
-    </button>
+    ${USUARIO_LOGADO?.isAdmin
+      ? `<button class="bnav-item ${S.view==='admin'?'on':''}" onclick="sv('admin')">
+          <span class="bnav-ico">👑</span><span class="bnav-lbl">Admin</span>
+        </button>`
+      : `<button class="bnav-item ${S.view==='cfg'?'on':''}" onclick="sv('cfg')">
+          <span class="bnav-ico">⚙️</span><span class="bnav-lbl">Config</span>
+        </button>`
+    }
   </div>`;
 }
 
@@ -556,10 +746,9 @@ function bConfigView(){
   <div class="sec-tit" style="margin-top:20px">Conta</div>
   <div class="card card-sm">
     <div style="font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.5">
-      Sair libera a plataforma para outra pessoa entrar com seus próprios dados.<br>
-      <span style="color:var(--rd);font-weight:600">Os dados desta conta não são apagados.</span>
+      Logada como <strong>${USUARIO_LOGADO?.nome||''}</strong>
     </div>
-    <button class="btn btn-sm" style="background:var(--tx);color:white;border-color:var(--tx)" onclick="sairDaConta()">↩ Sair da conta</button>
+    <button class="btn btn-sm" onclick="sairDaConta()">↩ Sair da conta</button>
   </div>
 </div>`;
 }
@@ -857,4 +1046,3 @@ R();
 </script>
 </body>
 </html>
-
