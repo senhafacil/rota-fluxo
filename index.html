@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -182,13 +181,13 @@ const DEFAULT_ETAPAS=[
    template:'[nome], para te ajudar da melhor forma, preciso entender algumas informações.\n\nPoderia me responder rapidinho:\n\n1. Qual é a sua maior necessidade hoje?\n2. Você já tem algo parecido?\n3. Qual é o seu prazo para decidir?',
    checklist:['Coletar dados completos (nome, contato, perfil)','Identificar necessidade e urgência','Verificar poder de decisão','Registrar informações no sistema']},
   {id:3,nome:'Proposta',cor:'#9A6C00',dias:3,
-   template:'[nome], preparei as melhores opções para o seu perfil!\n\nBaseado no que você me contou, selecionei algumas alternativas que atendem exatamente o que você precisa.\n\nPosso te apresentar os detalhes? Quando seria um bom momento?',
+   template:'[nome], preparei as melhores opções para o seu perfil!\n\nBaseado no que você me contou, selecionei [X] alternativas que atendem exatamente o que você precisa.\n\nPosso te apresentar os detalhes? Quando seria um bom momento?',
    checklist:['Preparar proposta personalizada','Apresentar opções e coberturas','Comparar vantagens e desvantagens','Registrar dúvidas e objeções']},
   {id:4,nome:'Follow-up',cor:'#C0392B',dias:2,
    template:'[nome], oi! 👋\n\nPassei para ver se você teve a oportunidade de analisar as opções que conversamos.\n\nTenho algumas novidades que podem te interessar. Posso te ligar em [data]?',
    checklist:['Verificar se analisou a proposta','Identificar e tratar objeções','Apresentar novas alternativas se necessário','Definir próximo passo com prazo']},
   {id:5,nome:'Fechamento',cor:'#1A7A4A',dias:2,
-   template:'Ótimo, [nome]! Fico feliz com a sua decisão! 🎉\n\nVamos finalizar o processo. Preciso de algumas informações para dar sequência.\n\nAssim que tiver tudo, dou andamento imediatamente!',
+   template:'Ótimo, [nome]! Fico feliz com a sua decisão! 🎉\n\nVamos finalizar o processo. Preciso de algumas informações:\n\n[lista de documentos necessários]\n\nAssim que tiver tudo, dou sequência imediatamente!',
    checklist:['Confirmar decisão e escolha','Solicitar documentos necessários','Preencher proposta e formulários','Confirmar dados e assinar']},
   {id:6,nome:'Pós-venda',cor:'#0F4C75',dias:15,
    template:'[nome], oi! Como está sendo a experiência? 😊\n\nPassei para ver se está tudo certinho e se posso te ajudar com alguma coisa.\n\nLembre-se: estou à disposição para qualquer dúvida!',
@@ -199,8 +198,16 @@ const DEFAULT_ETAPAS=[
 function gLS(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
 function sLS(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
+const ROTA_CODE='vanessa2026'; // código da Vanessa
+// Usuários com código próprio: adicione aqui novos usuários
+const ROTA_USERS=gLS('rota-users',[
+  // {nome:'Fulana', code:'fulana123', config:{negocio:'Fulana Estética',segmento:'Estética'}}
+]);
+
 var S={
   view:'pipeline',
+  role:gLS('rota-role','login'), // 'login' | 'admin' | 'user'
+  loginErr:'',
   etapaAtiva:null,
   setupDone:gLS('rota-setup',false),
   config:gLS('rota-config',{negocio:'',segmento:''}),
@@ -225,11 +232,75 @@ function save(){
   sLS('rota-nid',S.nid);
 }
 
-window.sairDaConta=function(){
-  if(!confirm('Sair da conta?\nOs dados ficam salvos para quando você voltar.')) return;
-  save();
-  localStorage.removeItem('rota-setup');
-  location.reload();
+// ── LOGIN / LOGOUT ────────────────────────────────────────────
+function bLoginRota(){
+  const err=S.loginErr||'';
+  return`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)">
+<div style="width:100%;max-width:340px">
+  <div style="text-align:center;margin-bottom:32px">
+    <div style="width:52px;height:52px;border-radius:14px;background:var(--p);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:white;margin:0 auto 12px">R</div>
+    <div style="font-size:22px;font-weight:900;color:var(--tx);letter-spacing:-.5px">ROTA Fluxo</div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:4px">por Vanessa de Oliveira · Mãe CEO</div>
+  </div>
+  <div class="card" style="padding:24px">
+    <div class="fg"><label class="fl">Código de acesso</label>
+    <div style="position:relative">
+      <input id="rf-code" type="password" placeholder="Digite seu código..." autocomplete="current-password"
+        style="font-family:monospace;font-size:15px;text-align:center;letter-spacing:2px;width:100%;padding-right:40px"
+        onkeydown="if(event.key==='Enter')doLoginRota()"/>
+      <span onclick="var el=document.getElementById('rf-code');el.type=el.type==='password'?'text':'password';this.textContent=el.type==='password'?'👁':'🙈'"
+        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;user-select:none">👁</span>
+    </div></div>
+    ${err?`<div style="font-size:12px;color:var(--rd);margin-bottom:10px;text-align:center">${err}</div>`:''}
+    <button onclick="doLoginRota()" style="width:100%;margin-top:4px;padding:12px;background:var(--p);color:white;border:none;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer">Entrar</button>
+  </div>
+  <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--tx3)">Não tem código? Fale com a Vanessa.</div>
+</div></div>`;
+}
+
+window.doLoginRota=function(){
+  const code=(document.getElementById('rf-code')?.value||'').trim().toLowerCase();
+  if(!code){S.loginErr='Digite o código de acesso';R();return;}
+  if(code===ROTA_CODE){
+    S.role='admin';S.loginErr='';
+    sLS('rota-role','admin');R();return;
+  }
+  const usr=ROTA_USERS.find(u=>u.code&&u.code.toLowerCase()===code);
+  if(usr){
+    S.role='user';S.loginErr='';
+    // Carrega dados do usuário específico
+    const uk='rota-data-'+usr.code;
+    const ud=gLS(uk,null);
+    if(ud){
+      S.config=ud.config||{negocio:usr.nome,segmento:''};
+      S.etapas=ud.etapas||gLS('rota-etapas',DEFAULT_ETAPAS);
+      S.clientes=ud.clientes||[];
+      S.leads=ud.leads||[];
+      S.nid=ud.nid||100;
+    } else {
+      S.config={negocio:usr.nome||'',segmento:''};
+      S.setupDone=false;
+    }
+    S.currentUser=usr;
+    sLS('rota-role','user');
+    sLS('rota-current-user',usr.code);
+    R();return;
+  }
+  S.loginErr='Código inválido.';R();
+};
+
+window.doLogoutRota=function(){
+  // Salva dados do usuário atual antes de sair
+  if(S.role==='user'&&S.currentUser){
+    const uk='rota-data-'+S.currentUser.code;
+    sLS(uk,{config:S.config,etapas:S.etapas,clientes:S.clientes,leads:S.leads,nid:S.nid});
+  } else if(S.role==='admin'){
+    save();
+  }
+  S.role='login';S.loginErr='';S.currentUser=null;
+  sLS('rota-role','login');
+  sLS('rota-current-user',null);
+  R();
 };
 
 // ── HELPERS ──────────────────────────────────────────────────────
@@ -261,6 +332,7 @@ function renderTpl(tpl,cli){
 function getCli(){return S.clientes.find(c=>c.id===S.cliId);}
 
 // ── RENDER ───────────────────────────────────────────────────────
+// Helpers acessíveis nos onclick inline
 window.setAba=function(id){S.etapaAtiva=id;R();};
 window.toggleTpl=function(id){S.tplAberto=S.tplAberto===id?null:id;R();};
 window.irAlertas=function(){S.view='clientes';S.busca='alerta';R();};
@@ -269,6 +341,7 @@ window.limparBusca=function(){S.busca='';R();};
 function R(){document.getElementById('app').innerHTML=H();}
 
 function H(){
+  if(S.role==='login') return bLoginRota();
   if(!S.setupDone)return bSetup();
   const modal=S.modal?bModal():'';
   return`${modal}
@@ -280,7 +353,10 @@ function H(){
       <div class="logo-sub">por Vanessa de Oliveira · Mãe CEO</div>
     </div>
   </div>
-  <div class="hdr-right">${S.config.segmento||''}</div>
+  <div class="hdr-right" style="display:flex;align-items:center;gap:8px">
+    <span style="font-size:11px;color:var(--tx3)">${S.config.segmento||''}</span>
+    <button onclick="doLogoutRota()" style="font-size:10px;font-weight:700;color:var(--tx3);background:none;border:.5px solid var(--bd2);border-radius:5px;padding:3px 8px;cursor:pointer">↩ Sair</button>
+  </div>
 </div>
 <div class="app">
   ${S.view==='pipeline'?bPipeline():S.view==='clientes'?bClientes():S.view==='leads'?bLeads():S.view==='templates'?bTemplates():bConfigView()}
@@ -318,10 +394,10 @@ function bSetup(){
   <div class="setup-sub">Configure seu sistema em 2 minutos<br>e comece a organizar seus clientes agora.</div>
   <div class="setup-card">
     <div class="fg"><label class="fl">Nome do seu negócio</label>
-      <input id="s-neg" placeholder="Ex: Meu Negócio" value="${S.config.negocio}"/>
+      <input id="s-neg" placeholder="Ex: Paula Consultoria em Saúde" value="${S.config.negocio}"/>
     </div>
     <div class="fg"><label class="fl">Segmento / produto</label>
-      <input id="s-seg" placeholder="Ex: Meu produto ou serviço" value="${S.config.segmento}"/>
+      <input id="s-seg" placeholder="Ex: Planos de Saúde" value="${S.config.segmento}"/>
     </div>
     <div style="margin-bottom:10px">
       <div class="fl">Etapas do seu processo</div>
@@ -376,6 +452,7 @@ function bPipeline(){
 function bCliCard(c){
   const et=S.etapas.find(e=>e.id===c.etapa_id);
   const al=emAlerta(c);
+  const d=dias(c.data_ult_acao||c.data_entrada);
   return`<div class="cli-card ${al?'alerta':''}" onclick="abrirCli(${c.id})">
   <div class="rwb">
     <div>
@@ -446,7 +523,7 @@ function bLeads(){
   <div class="sec-tit">Importar leads</div>
   <div class="info-tip">Cole aqui uma lista de leads (um por linha).<br>Formato aceito: Nome, Telefone, Segmento (separados por vírgula, ponto e vírgula ou tab)</div>
   <div class="fg">
-    <textarea id="leads-txt" rows="5" placeholder="Nome do Lead, (11) 99999-0000, Segmento&#10;..."></textarea>
+    <textarea id="leads-txt" rows="5" placeholder="Ana Lima, (21) 99999-1111, Médica&#10;João Silva, (21) 88888-2222, Empresário&#10;Maria Costa, (11) 77777-3333&#10;..."></textarea>
   </div>
   <button class="btn btn-p btn-sm" onclick="parsarLeads()">Processar lista →</button>
 
@@ -554,14 +631,6 @@ function bConfigView(){
     <button class="btn btn-xs btn-rd" onclick="if(confirm('Zerar todos os dados?')){S.clientes=[];S.leads=[];save();R()}">Limpar dados</button>
   </div>
 
-  <div class="sec-tit" style="margin-top:20px">Conta</div>
-  <div class="card card-sm">
-    <div style="font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.5">
-      Sair libera a plataforma para outra pessoa entrar com seus próprios dados.<br>
-      <span style="color:var(--rd);font-weight:600">Os dados desta conta não são apagados.</span>
-    </div>
-    <button class="btn btn-sm" style="background:var(--tx);color:white;border-color:var(--tx)" onclick="sairDaConta()">↩ Sair da conta</button>
-  </div>
 </div>`;
 }
 
@@ -578,10 +647,10 @@ function bModalNovoCli(){
   <div class="modal">
     <div class="modal-drag"></div>
     <div class="mtt">Novo cliente</div>
-    <div class="fg"><label class="fl">Nome completo *</label><input id="nc-nome" placeholder="Nome do cliente" autofocus/></div>
+    <div class="fg"><label class="fl">Nome completo *</label><input id="nc-nome" placeholder="Ana Lima" autofocus/></div>
     <div class="g2">
-      <div class="fg"><label class="fl">Telefone</label><input id="nc-tel" placeholder="(11) 99999-9999" type="tel"/></div>
-      <div class="fg"><label class="fl">Segmento / perfil</label><input id="nc-seg" placeholder="Segmento..."/></div>
+      <div class="fg"><label class="fl">Telefone</label><input id="nc-tel" placeholder="(21) 99999-9999" type="tel"/></div>
+      <div class="fg"><label class="fl">Segmento / perfil</label><input id="nc-seg" placeholder="Médica, Empresário..."/></div>
     </div>
     <div class="fg"><label class="fl">Etapa inicial</label>
       <select id="nc-etapa">
@@ -835,7 +904,6 @@ window.importarSelecionados=()=>{
   if(!S.leadsSel.length){alert('Selecione os leads a importar.');return;}
   const etapaId=parseInt(document.getElementById('leads-etapa')?.value)||S.etapas[0]?.id;
   const et=S.etapas.find(e=>e.id===etapaId);
-  const qtd=S.leadsSel.length;
   S.leadsSel.forEach(lid=>{
     const lead=S.leads.find(l=>l.id===lid);
     if(!lead)return;
@@ -848,9 +916,7 @@ window.importarSelecionados=()=>{
     S.leads=S.leads.map(l=>l.id===lid?{...l,importado:true}:l);
   });
   S.leadsSel=[];
-  save();
-  alert(`${qtd} lead${qtd!==1?'s':''} importado${qtd!==1?'s':''}! Veja no Pipeline.`);
-  R();
+  const qtd=S.leadsSel.length;S.leadsSel=[];save();alert(`${qtd} lead${qtd!==1?'s':''} importado${qtd!==1?'s':''}! Veja no Pipeline.`);R();
 };
 window.removerLead=(id)=>{S.leads=S.leads.filter(l=>l.id!==id);save();R()};
 
