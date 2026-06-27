@@ -215,7 +215,10 @@ async function carregarDadosRota(){
     if(d.clientes) S.clientes = d.clientes;
     if(d.leads) S.leads = d.leads;
     if(d.nid) S.nid = d.nid;
-    S.setupDone = true;
+    // setupDone é true se negocio já foi preenchido
+    S.setupDone = !!(d.config && d.config.negocio);
+  } else {
+    S.setupDone = false;
   }
 }
 
@@ -874,13 +877,15 @@ window.abrirNovoCli=()=>{S.modal='novo-cli';R()};
 window.abrirCli=id=>{S.cliId=id;S.modal='detalhe';R()};
 window.abrirTemplate=id=>{S.cliId=id;S.modal='template';R()};
 
-window.finalizarSetup=()=>{
+window.finalizarSetup=async()=>{
   const neg=document.getElementById('s-neg').value.trim();
   const seg=document.getElementById('s-seg').value.trim();
   if(!neg){alert('Informe o nome do negócio');return;}
   S.config={negocio:neg,segmento:seg};
   S.setupDone=true;
-  save();R();
+  S.etapas=JSON.parse(JSON.stringify(DEFAULT_ETAPAS));
+  await salvarDadosRota();
+  R();
 };
 
 window.salvarNovoCli=()=>{
@@ -1043,6 +1048,5 @@ window.removerLead=(id)=>{S.leads=S.leads.filter(l=>l.id!==id);save();R()};
 
 R();
 </script>
-<!-- deploy v3 -->
 </body>
 </html>
