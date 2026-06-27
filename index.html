@@ -172,17 +172,18 @@ textarea{resize:vertical;min-height:80px;line-height:1.5}
 <script>
 // ── SUPABASE ─────────────────────────────────────────────────────
 const SUPA_URL = 'https://kzsospnvnrotgpquvliy.supabase.co';
-const SUPA_KEY = 'sb_publishable_D9fMdHocNzz_nkwhUmrwhw_6ifM0AUE';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6c29zcG52bnJvdGdwcXV2bGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NzYxMjksImV4cCI6MjA5ODA1MjEyOX0.QsiRQtssviL-4byb23ddEDDDPAd8q6FKJS6FNkuRtJk';
 const SUPA_HDR = {'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
 
 let USUARIO_LOGADO = null; // {login, nome, isAdmin}
 
 async function supaQ(tabela, filtro=''){
   try{
-    const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${filtro}`,{headers:SUPA_HDR});
-    if(!r.ok) return null;
+    const url = `${SUPA_URL}/rest/v1/${tabela}?${filtro}`;
+    const r = await fetch(url,{headers:SUPA_HDR});
+    if(!r.ok){ console.error('supaQ error:', r.status, tabela, filtro); return null; }
     return await r.json();
-  }catch(e){return null;}
+  }catch(e){console.error('supaQ exception:', e); return null;}
 }
 
 async function supaPost(tabela, dados, upsert=false){
@@ -192,8 +193,9 @@ async function supaPost(tabela, dados, upsert=false){
       headers:{...SUPA_HDR,'Prefer': upsert?'resolution=merge-duplicates':'return=minimal'},
       body:JSON.stringify(dados)
     });
+    if(!r.ok){ console.error('supaPost error:', r.status, await r.text()); }
     return r.ok;
-  }catch(e){return false;}
+  }catch(e){console.error('supaPost exception:', e); return false;}
 }
 
 async function supaDelete(tabela, filtro){
