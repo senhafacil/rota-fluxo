@@ -332,7 +332,6 @@ window.fazerLogin = async function(){
 
   // Carrega dados do Supabase
   await carregarDadosRota();
-  if(!S.setupDone) S.setupDone = !!S.config.negocio;
   R();
 };
 
@@ -455,7 +454,9 @@ function H(){
     setTimeout(carregarListaMentoradas, 100);
     return `<div class="hdr"><div class="logo"><div class="logo-r">R</div><div><div class="logo-txt">ROTA Fluxo</div><div class="logo-sub">por Vanessa de Oliveira · Mãe CEO</div></div></div><div class="hdr-right">Admin</div></div><div class="app">${bAdmin()}</div>${bBottomNav()}`;
   }
-  if(!S.setupDone)return bSetup();
+  // Considera setup feito se negocio está preenchido
+  const setupFeito = S.setupDone || !!(S.config && S.config.negocio);
+  if(!setupFeito) return bSetup();
   const modal=S.modal?bModal():'';
   return`${modal}
 <div class="hdr">
