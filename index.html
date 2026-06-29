@@ -894,9 +894,12 @@ window.finalizarSetup=async()=>{
   S.config={negocio:neg,segmento:seg};
   S.setupDone=true;
   S.etapas=JSON.parse(JSON.stringify(DEFAULT_ETAPAS));
-  // Salva no Supabase
-  const ok = await salvarDadosRota();
-  console.log('Setup salvo:', ok);
+  const ok=await salvarDadosRota();
+  if(!ok){
+    alert('Erro ao salvar. Verifique sua conexão e tente novamente.');
+    S.setupDone=false;
+    return;
+  }
   R();
 };
 
