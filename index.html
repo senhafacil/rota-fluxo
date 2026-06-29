@@ -226,9 +226,11 @@ async function carregarDadosRota(){
 }
 
 async function salvarDadosRota(){
-  if(!USUARIO_LOGADO) return;
+  if(!USUARIO_LOGADO) return false;
   const dados = {config:S.config, etapas:S.etapas, clientes:S.clientes, leads:S.leads, nid:S.nid};
-  await supaPost('rota_dados', {login:USUARIO_LOGADO.login, dados, atualizado_em:new Date().toISOString()}, true);
+  const ok = await supaPost('rota_dados', {login:USUARIO_LOGADO.login, dados, atualizado_em:new Date().toISOString()}, true);
+  console.log('salvarDadosRota result:', ok, 'login:', USUARIO_LOGADO.login);
+  return ok;
 }
 
 // ── DEFAULTS ────────────────────────────────────────────────────
@@ -461,13 +463,10 @@ function R(){document.getElementById('app').innerHTML=H();}
 function H(){
   if(!USUARIO_LOGADO) return bLogin();
 
-  // Admin sempre vê painel admin (exceto se navegou para outra view)
+  // Admin SEMPRE vê painel admin - sem exceção
   if(USUARIO_LOGADO.isAdmin) {
-    if(S.view==='admin' || S.view==='pipeline') {
-      S.view='admin';
-      setTimeout(carregarListaMentoradas, 100);
-      return `<div class="hdr"><div class="logo"><div class="logo-r">R</div><div><div class="logo-txt">ROTA Fluxo</div><div class="logo-sub">por Vanessa de Oliveira · Mãe CEO</div></div></div><div class="hdr-right">Admin</div></div><div class="app">${bAdmin()}</div>${bBottomNav()}`;
-    }
+    setTimeout(carregarListaMentoradas, 100);
+    return `<div class="hdr"><div class="logo"><div class="logo-r">R</div><div><div class="logo-txt">ROTA Fluxo</div><div class="logo-sub">por Vanessa de Oliveira · Mãe CEO</div></div></div><div class="hdr-right">👑 Admin</div></div><div class="app">${bAdmin()}</div>`;
   }
 
   // Considera setup feito se negocio está preenchido
@@ -901,7 +900,9 @@ window.finalizarSetup=async()=>{
   S.config={negocio:neg,segmento:seg};
   S.setupDone=true;
   S.etapas=JSON.parse(JSON.stringify(DEFAULT_ETAPAS));
-  await salvarDadosRota();
+  // Salva no Supabase
+  const ok = await salvarDadosRota();
+  console.log('Setup salvo:', ok);
   R();
 };
 
