@@ -333,7 +333,14 @@ window.fazerLogin = async function(){
     isAdmin: rows[0].login === 'vanessa2026'
   };
 
-  // Carrega dados do Supabase
+  // Admin vai direto para painel admin
+  if(USUARIO_LOGADO.isAdmin) {
+    S.view = 'admin';
+    R();
+    return;
+  }
+
+  // Mentorada: carrega dados do Supabase
   await carregarDadosRota();
   R();
 };
@@ -453,10 +460,16 @@ function R(){document.getElementById('app').innerHTML=H();}
 
 function H(){
   if(!USUARIO_LOGADO) return bLogin();
-  if(USUARIO_LOGADO.isAdmin && S.view==='admin') {
-    setTimeout(carregarListaMentoradas, 100);
-    return `<div class="hdr"><div class="logo"><div class="logo-r">R</div><div><div class="logo-txt">ROTA Fluxo</div><div class="logo-sub">por Vanessa de Oliveira · Mãe CEO</div></div></div><div class="hdr-right">Admin</div></div><div class="app">${bAdmin()}</div>${bBottomNav()}`;
+
+  // Admin sempre vê painel admin (exceto se navegou para outra view)
+  if(USUARIO_LOGADO.isAdmin) {
+    if(S.view==='admin' || S.view==='pipeline') {
+      S.view='admin';
+      setTimeout(carregarListaMentoradas, 100);
+      return `<div class="hdr"><div class="logo"><div class="logo-r">R</div><div><div class="logo-txt">ROTA Fluxo</div><div class="logo-sub">por Vanessa de Oliveira · Mãe CEO</div></div></div><div class="hdr-right">Admin</div></div><div class="app">${bAdmin()}</div>${bBottomNav()}`;
+    }
   }
+
   // Considera setup feito se negocio está preenchido
   const setupFeito = S.setupDone || !!(S.config && S.config.negocio);
   if(!setupFeito) return bSetup();
