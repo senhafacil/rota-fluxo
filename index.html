@@ -227,10 +227,34 @@ async function carregarDadosRota(){
 
 async function salvarDadosRota(){
   if(!USUARIO_LOGADO) return false;
-  const dados = {config:S.config, etapas:S.etapas, clientes:S.clientes, leads:S.leads, nid:S.nid};
-  const ok = await supaPost('rota_dados', {login:USUARIO_LOGADO.login, dados, atualizado_em:new Date().toISOString()}, true);
-  console.log('salvarDadosRota result:', ok, 'login:', USUARIO_LOGADO.login);
-  return ok;
+  const payload = {login:USUARIO_LOGADO.login, dados:{config:S.config, etapas:S.etapas, clientes:S.clientes, leads:S.leads, nid:S.nid}, atualizado_em:new Date().toISOString()};
+  
+  // Tenta UPDATE primeiro (PATCH)
+  try{
+    const r = await fetch(`${SUPA_URL}/rest/v1/rota_dados?login=eq.${encodeURIComponent(USUARIO_LOGADO.login)}`,{
+      method:'PATCH',
+      headers:{...SUPA_HDR,'Prefer':'return=minimal'},
+      body:JSON.stringify({dados:payload.dados, atualizado_em:payload.atualizado_em})
+    });
+    if(r.ok){
+      // PATCH pode retornar 204 sem corpo - verificar se atualizou alguma linha
+      // Se não havia linha, tenta INSERT
+      const updated = r.headers.get('content-range');
+      if(updated && updated !== '*/0'){
+        return true;
+      }
+      // Tenta INSERT
+      const r2 = await fetch(`${SUPA_URL}/rest/v1/rota_dados`,{
+        method:'POST',
+        headers:{...SUPA_HDR,'Prefer':'return=minimal'},
+        body:JSON.stringify(payload)
+      });
+      if(!r2.ok){ const t=await r2.text(); console.error('INSERT error:',r2.status,t); }
+      return r2.ok;
+    }
+    console.error('PATCH error:', r.status);
+  }catch(e){ console.error('salvar exception:', e); }
+  return false;
 }
 
 // ── DEFAULTS ────────────────────────────────────────────────────
