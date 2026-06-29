@@ -335,15 +335,15 @@ window.fazerLogin = async function(){
     isAdmin: rows[0].login === 'vanessa2026'
   };
 
-  // Admin vai direto para painel admin
-  if(USUARIO_LOGADO.isAdmin) {
-    S.view = 'admin';
-    R();
-    return;
-  }
-
-  // Mentorada: carrega dados do Supabase
+  // Carrega dados do Supabase para qualquer usuário
   await carregarDadosRota();
+  // Admin: se não tem config, cria padrão
+  if(USUARIO_LOGADO.isAdmin && !S.config.negocio){
+    S.config = {negocio:'Raiz × Resultado', segmento:'Mentoria'};
+    S.setupDone = true;
+    S.etapas = JSON.parse(JSON.stringify(DEFAULT_ETAPAS));
+    await salvarDadosRota();
+  }
   R();
 };
 
@@ -463,12 +463,6 @@ function R(){document.getElementById('app').innerHTML=H();}
 function H(){
   if(!USUARIO_LOGADO) return bLogin();
 
-  // Admin SEMPRE vê painel admin - sem exceção
-  if(USUARIO_LOGADO.isAdmin) {
-    setTimeout(carregarListaMentoradas, 100);
-    return `<div class="hdr"><div class="logo"><div class="logo-r">R</div><div><div class="logo-txt">ROTA Fluxo</div><div class="logo-sub">por Vanessa de Oliveira · Mãe CEO</div></div></div><div class="hdr-right">👑 Admin</div></div><div class="app">${bAdmin()}</div>`;
-  }
-
   // Considera setup feito se negocio está preenchido
   const setupFeito = S.setupDone || !!(S.config && S.config.negocio);
   if(!setupFeito) return bSetup();
@@ -485,7 +479,7 @@ function H(){
   <div class="hdr-right">${S.config.segmento||USUARIO_LOGADO?.nome||''}</div>
 </div>
 <div class="app">
-  ${S.view==='pipeline'?bPipeline():S.view==='clientes'?bClientes():S.view==='leads'?bLeads():S.view==='templates'?bTemplates():bConfigView()}
+  ${S.view==='admin'?bAdmin():S.view==='pipeline'?bPipeline():S.view==='clientes'?bClientes():S.view==='leads'?bLeads():S.view==='templates'?bTemplates():bConfigView()}
 </div>
 ${bBottomNav()}`;
 }
