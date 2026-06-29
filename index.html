@@ -188,12 +188,13 @@ async function supaQ(tabela, filtro=''){
 
 async function supaPost(tabela, dados, upsert=false){
   try{
-    const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}`,{
+    const url = upsert ? `${SUPA_URL}/rest/v1/${tabela}?on_conflict=login` : `${SUPA_URL}/rest/v1/${tabela}`;
+    const r = await fetch(url,{
       method:'POST',
-      headers:{...SUPA_HDR,'Prefer': upsert?'resolution=merge-duplicates':'return=minimal'},
+      headers:{...SUPA_HDR,'Prefer': upsert?'resolution=merge-duplicates,return=minimal':'return=minimal'},
       body:JSON.stringify(dados)
     });
-    if(!r.ok){ console.error('supaPost error:', r.status, await r.text()); }
+    if(!r.ok){ const t=await r.text(); console.error('supaPost error:', r.status, t); }
     return r.ok;
   }catch(e){console.error('supaPost exception:', e); return false;}
 }
