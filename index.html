@@ -479,7 +479,7 @@ function H(){
   <div class="hdr-right">${S.config.segmento||USUARIO_LOGADO?.nome||''}</div>
 </div>
 <div class="app">
-  ${S.view==='admin'?bAdmin():S.view==='pipeline'?bPipeline():S.view==='clientes'?bClientes():S.view==='leads'?bLeads():S.view==='templates'?bTemplates():bConfigView()}
+  ${S.view==='admin'?(setTimeout(carregarListaMentoradas,100),bAdmin()):S.view==='pipeline'?bPipeline():S.view==='clientes'?bClientes():S.view==='leads'?bLeads():S.view==='templates'?bTemplates():bConfigView()}
 </div>
 ${bBottomNav()}`;
 }
