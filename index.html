@@ -214,7 +214,15 @@ async function carregarDadosRota(){
   if(rows && rows.length > 0 && rows[0].dados){
     const d = rows[0].dados;
     if(d.config) S.config = d.config;
-    if(d.etapas) S.etapas = d.etapas;
+    if(d.etapas){
+      S.etapas = d.etapas;
+      // Adicionar novas etapas do DEFAULT que ainda não existem
+      DEFAULT_ETAPAS.forEach(de=>{
+        if(!S.etapas.find(e=>e.id===de.id)){
+          S.etapas.push(de);
+        }
+      });
+    }
     if(d.clientes) S.clientes = d.clientes;
     if(d.leads) S.leads = d.leads;
     if(d.nid) S.nid = d.nid;
