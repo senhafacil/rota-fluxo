@@ -30,12 +30,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .hdr-right{color:rgba(255,255,255,.6);font-size:11px;font-weight:600}
 
 /* BOTTOM NAV */
-.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:.5px solid var(--bd2);display:flex;z-index:50;max-width:900px;margin:0 auto}
-.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 6px;cursor:pointer;transition:all .15s;border:none;background:transparent;font-family:inherit;gap:3px}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:.5px solid var(--bd2);display:flex;z-index:50;max-width:900px;margin:0 auto;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.bnav-item{flex:0 0 auto;min-width:60px;display:flex;flex-direction:column;align-items:center;padding:8px 6px 6px;cursor:pointer;transition:all .15s;border:none;background:transparent;font-family:inherit;gap:2px}
 .bnav-item.on .bnav-ico{color:var(--p)}
 .bnav-item.on .bnav-lbl{color:var(--p);font-weight:700}
 .bnav-ico{font-size:20px;color:var(--tx3)}
-.bnav-lbl{font-size:10px;font-weight:500;color:var(--tx3)}
+.bnav-lbl{font-size:9px;font-weight:500;color:var(--tx3)}
 .badge-nav{position:absolute;top:4px;right:calc(50% - 16px);background:var(--rd);color:white;border-radius:99px;font-size:9px;font-weight:700;padding:1px 5px;min-width:16px;text-align:center}
 
 /* CONTENT */
