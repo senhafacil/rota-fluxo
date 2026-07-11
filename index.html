@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>ROTA Fluxo v3.1</title>
+<title>Nauta Fluxo v3.1</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -328,9 +328,21 @@ window.toggleManutencao = function(id){
   save(); R();
 };
 
+
+function bPipelineTabs(){
+  const nAtraso = (S.clientes||[]).filter(c=>c.emAtraso).length;
+  const nManut  = (S.clientes||[]).filter(c=>c.emManutencao).length;
+  return `<div style="display:flex;gap:0;margin-bottom:14px;border-bottom:2px solid var(--bd2)">
+    <button onclick="sv('pipeline')" style="padding:8px 14px;border:none;background:none;cursor:pointer;font-weight:700;font-size:13px;color:${S.view==='pipeline'?'var(--p)':'#999'};border-bottom:2px solid ${S.view==='pipeline'?'var(--p)':'transparent'};margin-bottom:-2px">📊 Pipeline</button>
+    <button onclick="sv('atraso')" style="padding:8px 14px;border:none;background:none;cursor:pointer;font-weight:700;font-size:13px;color:${S.view==='atraso'?'#e67e22':'#999'};border-bottom:2px solid ${S.view==='atraso'?'#e67e22':'transparent'};margin-bottom:-2px">⏰ Atrasos${nAtraso?` <span style="background:#e67e22;color:#fff;border-radius:10px;padding:1px 5px;font-size:10px">${nAtraso}</span>`:''}</button>
+    <button onclick="sv('manutencao')" style="padding:8px 14px;border:none;background:none;cursor:pointer;font-weight:700;font-size:13px;color:${S.view==='manutencao'?'#2980b9':'#999'};border-bottom:2px solid ${S.view==='manutencao'?'#2980b9':'transparent'};margin-bottom:-2px">🔧 Manutenção${nManut?` <span style="background:#2980b9;color:#fff;border-radius:10px;padding:1px 5px;font-size:10px">${nManut}</span>`:''}</button>
+  </div>`;
+}
+
 function bAtraso(){
   const atrasados = (S.clientes||[]).filter(c=>c.emAtraso);
   return `<div class="ct">
+    ${bPipelineTabs()}
     <div style="background:linear-gradient(135deg,#e67e22,#d35400);border-radius:var(--r);padding:16px;margin-bottom:16px;color:white">
       <div style="font-size:14px;font-weight:800">⏰ Atraso de Pagamento</div>
       <div style="font-size:12px;opacity:.8;margin-top:2px">${atrasados.length} cliente${atrasados.length!==1?'s':''} em atraso</div>
@@ -354,6 +366,7 @@ function bAtraso(){
 function bManutencao(){
   const manutencao = (S.clientes||[]).filter(c=>c.emManutencao);
   return `<div class="ct">
+    ${bPipelineTabs()}
     <div style="background:linear-gradient(135deg,#2980b9,#1a5276);border-radius:var(--r);padding:16px;margin-bottom:16px;color:white">
       <div style="font-size:14px;font-weight:800">🔧 Manutenção</div>
       <div style="font-size:12px;opacity:.8;margin-top:2px">${manutencao.length} cliente${manutencao.length!==1?'s':''} em manutenção</div>
@@ -387,7 +400,7 @@ window.sairDaConta=function(){
 function bLogin(){
   return`<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:var(--bg)">
   <div style="width:64px;height:64px;background:linear-gradient(135deg,#7B2F8A,#2D1B69);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:white;margin:0 auto 16px">R</div>
-  <div style="font-size:22px;font-weight:800;color:var(--p);text-align:center;margin-bottom:6px">ROTA Fluxo</div>
+  <div style="font-size:22px;font-weight:800;color:var(--p);text-align:center;margin-bottom:6px">Nauta Fluxo</div>
   <div style="font-size:13px;color:var(--tx3);text-align:center;margin-bottom:28px">por Vanessa de Oliveira · Mãe CEO</div>
   <div style="background:var(--sf);border-radius:var(--r);padding:24px;width:100%;max-width:360px;border:.5px solid var(--bd2);box-shadow:0 4px 20px rgba(45,27,105,.1)">
     <div style="font-size:16px;font-weight:800;color:var(--p);margin-bottom:18px;text-align:center">Entrar no sistema</div>
@@ -566,9 +579,9 @@ function H(){
   return`${modal}
 <div class="hdr">
   <div class="logo">
-    <div class="logo-r">R</div>
+    <div class="logo-r">N</div>
     <div>
-      <div class="logo-txt">ROTA Fluxo</div>
+      <div class="logo-txt">Nauta Fluxo</div>
       <div class="logo-sub">por Vanessa de Oliveira · Mãe CEO</div>
     </div>
   </div>
@@ -619,7 +632,7 @@ function bBottomNav(){
 function bSetup(){
   return`<div class="setup-wrap">
   <div class="setup-logo">R</div>
-  <div class="setup-tit">Bem-vinda ao ROTA Fluxo</div>
+  <div class="setup-tit">Bem-vinda ao Nauta Fluxo</div>
   <div class="setup-sub">Configure seu sistema em 2 minutos<br>e comece a organizar seus clientes agora.</div>
   <div class="setup-card">
     <div class="fg"><label class="fl">Nome do seu negócio</label>
@@ -653,15 +666,7 @@ function bPipeline(){
     .sort((a,b)=>(emAlerta(b)?1:0)-(emAlerta(a)?1:0));
 
   return`<div class="ct">
-  <div style="display:flex;gap:8px;margin-bottom:14px;border-bottom:2px solid var(--bd2);padding-bottom:0">
-    <button onclick="sv('pipeline')" style="padding:8px 16px;border:none;background:none;cursor:pointer;font-weight:700;font-size:13px;color:${S.view==='pipeline'?'var(--p)':'#999'};border-bottom:2px solid ${S.view==='pipeline'?'var(--p)':'transparent'};margin-bottom:-2px">📊 Pipeline</button>
-    <button onclick="sv('atraso')" style="padding:8px 16px;border:none;background:none;cursor:pointer;font-weight:700;font-size:13px;color:${S.view==='atraso'?'#e67e22':'#999'};border-bottom:2px solid ${S.view==='atraso'?'#e67e22':'transparent'};margin-bottom:-2px;position:relative">
-      ⏰ Atrasos${(S.clientes||[]).filter(c=>c.emAtraso).length?` <span style="background:#e67e22;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${(S.clientes||[]).filter(c=>c.emAtraso).length}</span>`:''}
-    </button>
-    <button onclick="sv('manutencao')" style="padding:8px 16px;border:none;background:none;cursor:pointer;font-weight:700;font-size:13px;color:${S.view==='manutencao'?'#2980b9':'#999'};border-bottom:2px solid ${S.view==='manutencao'?'#2980b9':'transparent'};margin-bottom:-2px;position:relative">
-      🔧 Manutenção${(S.clientes||[]).filter(c=>c.emManutencao).length?` <span style="background:#2980b9;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${(S.clientes||[]).filter(c=>c.emManutencao).length}</span>`:''}
-    </button>
-  </div>
+  ${bPipelineTabs()}
   ${alertas.length?`<div class="alert-ban">
     <span>⚠️</span>
     <span class="alert-ban-txt">${alertas.length} cliente${alertas.length>1?'s precisam':'precisa'} de follow-up urgente</span>
