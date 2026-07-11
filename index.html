@@ -653,6 +653,15 @@ function bPipeline(){
     .sort((a,b)=>(emAlerta(b)?1:0)-(emAlerta(a)?1:0));
 
   return`<div class="ct">
+  <div style="display:flex;gap:8px;margin-bottom:14px;border-bottom:2px solid var(--bd2);padding-bottom:0">
+    <button onclick="sv('pipeline')" style="padding:8px 16px;border:none;background:none;cursor:pointer;font-weight:700;font-size:13px;color:${S.view==='pipeline'?'var(--p)':'#999'};border-bottom:2px solid ${S.view==='pipeline'?'var(--p)':'transparent'};margin-bottom:-2px">📊 Pipeline</button>
+    <button onclick="sv('atraso')" style="padding:8px 16px;border:none;background:none;cursor:pointer;font-weight:700;font-size:13px;color:${S.view==='atraso'?'#e67e22':'#999'};border-bottom:2px solid ${S.view==='atraso'?'#e67e22':'transparent'};margin-bottom:-2px;position:relative">
+      ⏰ Atrasos${(S.clientes||[]).filter(c=>c.emAtraso).length?` <span style="background:#e67e22;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${(S.clientes||[]).filter(c=>c.emAtraso).length}</span>`:''}
+    </button>
+    <button onclick="sv('manutencao')" style="padding:8px 16px;border:none;background:none;cursor:pointer;font-weight:700;font-size:13px;color:${S.view==='manutencao'?'#2980b9':'#999'};border-bottom:2px solid ${S.view==='manutencao'?'#2980b9':'transparent'};margin-bottom:-2px;position:relative">
+      🔧 Manutenção${(S.clientes||[]).filter(c=>c.emManutencao).length?` <span style="background:#2980b9;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${(S.clientes||[]).filter(c=>c.emManutencao).length}</span>`:''}
+    </button>
+  </div>
   ${alertas.length?`<div class="alert-ban">
     <span>⚠️</span>
     <span class="alert-ban-txt">${alertas.length} cliente${alertas.length>1?'s precisam':'precisa'} de follow-up urgente</span>
