@@ -298,6 +298,82 @@ function save(){
   salvarDadosRota();
 }
 
+
+/* ══ ATRASO ══ */
+window.toggleAtraso = function(id){
+  const c = S.clientes.find(x=>x.id===id);
+  if(!c) return;
+  if(c.emAtraso){
+    if(!confirm('Marcar como PAGO e remover do atraso?')) return;
+    c.emAtraso = false;
+    c.pgtoAtraso = new Date().toISOString().split('T')[0];
+  } else {
+    c.emAtraso = true;
+    c.dataAtraso = new Date().toISOString().split('T')[0];
+  }
+  save(); R();
+};
+
+window.toggleManutencao = function(id){
+  const c = S.clientes.find(x=>x.id===id);
+  if(!c) return;
+  if(c.emManutencao){
+    if(!confirm('Confirmar saída da manutenção?')) return;
+    c.emManutencao = false;
+    c.saidaManutencao = new Date().toISOString().split('T')[0];
+  } else {
+    c.emManutencao = true;
+    c.entradaManutencao = new Date().toISOString().split('T')[0];
+  }
+  save(); R();
+};
+
+function bAtraso(){
+  const atrasados = (S.clientes||[]).filter(c=>c.emAtraso);
+  return `<div class="ct">
+    <div style="background:linear-gradient(135deg,#e67e22,#d35400);border-radius:var(--r);padding:16px;margin-bottom:16px;color:white">
+      <div style="font-size:14px;font-weight:800">⏰ Atraso de Pagamento</div>
+      <div style="font-size:12px;opacity:.8;margin-top:2px">${atrasados.length} cliente${atrasados.length!==1?'s':''} em atraso</div>
+    </div>
+    ${!atrasados.length
+      ? '<div style="text-align:center;color:#999;padding:40px;font-size:14px">✅ Nenhum cliente em atraso!</div>'
+      : atrasados.map(c=>`
+        <div style="border:1px solid #e67e22;border-radius:var(--r);padding:14px;margin-bottom:10px;background:#fff">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:700;font-size:14px">${c.nome}</div>
+              <div style="font-size:12px;color:#999;margin-top:2px">Em atraso desde: ${c.dataAtraso||'—'} ${c.tel?'· '+c.tel:''}</div>
+            </div>
+            <button onclick="toggleAtraso(${c.id})" style="background:#27ae60;color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px">✅ Marcar como Pago</button>
+          </div>
+          ${c.obs?`<div style="font-size:12px;color:#666;margin-top:8px;padding-top:8px;border-top:1px solid #f0f0f0">${c.obs}</div>`:''}
+        </div>`).join('')}
+  </div>`;
+}
+
+function bManutencao(){
+  const manutencao = (S.clientes||[]).filter(c=>c.emManutencao);
+  return `<div class="ct">
+    <div style="background:linear-gradient(135deg,#2980b9,#1a5276);border-radius:var(--r);padding:16px;margin-bottom:16px;color:white">
+      <div style="font-size:14px;font-weight:800">🔧 Manutenção</div>
+      <div style="font-size:12px;opacity:.8;margin-top:2px">${manutencao.length} cliente${manutencao.length!==1?'s':''} em manutenção</div>
+    </div>
+    ${!manutencao.length
+      ? '<div style="text-align:center;color:#999;padding:40px;font-size:14px">✅ Nenhum cliente em manutenção!</div>'
+      : manutencao.map(c=>`
+        <div style="border:1px solid #2980b9;border-radius:var(--r);padding:14px;margin-bottom:10px;background:#fff">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:700;font-size:14px">${c.nome}</div>
+              <div style="font-size:12px;color:#999;margin-top:2px">Desde: ${c.entradaManutencao||'—'} ${c.tel?'· '+c.tel:''}</div>
+            </div>
+            <button onclick="toggleManutencao(${c.id})" style="background:#27ae60;color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px">✅ Finalizar Manutenção</button>
+          </div>
+          ${c.obs?`<div style="font-size:12px;color:#666;margin-top:8px;padding-top:8px;border-top:1px solid #f0f0f0">${c.obs}</div>`:''}
+        </div>`).join('')}
+  </div>`;
+}
+
 window.sairDaConta=function(){
   if(!confirm('Sair da conta?')) return;
   USUARIO_LOGADO = null;
@@ -520,6 +596,14 @@ function bBottomNav(){
     <button class="bnav-item ${S.view==='templates'?'on':''}" onclick="sv('templates')">
       <span class="bnav-ico">💬</span><span class="bnav-lbl">Templates</span>
     </button>
+    <button class="bnav-item ${S.view==='atraso'?'on':''}" onclick="sv('atraso')">
+      <span class="bnav-ico">⏰</span><span class="bnav-lbl">Atrasos</span>
+      ${(S.clientes||[]).filter(c=>c.emAtraso).length?`<span class="badge-nav">${(S.clientes||[]).filter(c=>c.emAtraso).length}</span>`:''}
+    </button>
+    <button class="bnav-item ${S.view==='manutencao'?'on':''}" onclick="sv('manutencao')">
+      <span class="bnav-ico">🔧</span><span class="bnav-lbl">Manutenção</span>
+      ${(S.clientes||[]).filter(c=>c.emManutencao).length?`<span class="badge-nav">${(S.clientes||[]).filter(c=>c.emManutencao).length}</span>`:''}
+    </button>
     ${USUARIO_LOGADO?.isAdmin
       ? `<button class="bnav-item ${S.view==='admin'?'on':''}" onclick="sv('admin')">
           <span class="bnav-ico">👑</span><span class="bnav-lbl">Admin</span>
@@ -613,6 +697,8 @@ function bCliCard(c){
     ${c.tel?`<button class="btn btn-sm" onclick="window.open('tel:${c.tel.replace(/\D/g,'')}')">📞 Ligar</button>`:''}
     <button class="btn btn-sm" onclick="abrirTemplate(${c.id})">💬 Template</button>
     ${et&&S.etapas.indexOf(et)<S.etapas.length-1?`<button class="btn btn-sm btn-gr" onclick="avancarEtapa(${c.id})">→ Avançar</button>`:''}
+    <button class="btn btn-sm" style="background:${c.emAtraso?'#27ae60':'#e67e22'};color:#fff" onclick="toggleAtraso(${c.id})">${c.emAtraso?'✅ Pago':'⏰ Atraso pgto'}</button>
+    <button class="btn btn-sm" style="background:${c.emManutencao?'#27ae60':'#2980b9'};color:#fff" onclick="toggleManutencao(${c.id})">${c.emManutencao?'✅ Saiu':'🔧 Manutenção'}</button>
   </div>
 </div>`;
 }
