@@ -275,6 +275,12 @@ const DEFAULT_ETAPAS=[
   {id:6,nome:'Pós-venda',cor:'#0F4C75',dias:15,
    template:'[nome], oi! Como está sendo a experiência? 😊\n\nPassei para ver se está tudo certinho e se posso te ajudar com alguma coisa.\n\nLembre-se: estou à disposição para qualquer dúvida!',
    checklist:['Confirmar ativação/início','Apresentar benefícios e próximos passos','Pedir feedback e avaliação','Solicitar indicação de contatos']},
+  {id:7,nome:'Atraso pgto',cor:'#e67e22',dias:2,
+   template:'[nome], tudo bem? 😊\n\nPassei para verificar sobre o pagamento que ficou pendente.\n\nPodemos resolver isso juntos? Me avise o melhor jeito para regularizar!',
+   checklist:['Verificar valor em aberto','Entrar em contato','Registrar promessa de pagamento','Confirmar pagamento recebido']},
+  {id:8,nome:'Manutenção',cor:'#2980b9',dias:5,
+   template:'[nome], olá! 👋\n\nVi que você solicitou manutenção. Quero garantir que tudo seja resolvido rapidinho!\n\nPode me passar mais detalhes do que precisa?',
+   checklist:['Registrar solicitação de manutenção','Definir prazo de atendimento','Executar manutenção','Confirmar conclusão com cliente']},
 ];
 
 // ── STATE ────────────────────────────────────────────────────────
@@ -342,7 +348,6 @@ function bPipelineTabs(){
 function bAtraso(){
   const atrasados = (S.clientes||[]).filter(c=>c.emAtraso);
   return `<div class="ct">
-    ${bPipelineTabs()}
     <div style="background:linear-gradient(135deg,#e67e22,#d35400);border-radius:var(--r);padding:16px;margin-bottom:16px;color:white">
       <div style="font-size:14px;font-weight:800">⏰ Atraso de Pagamento</div>
       <div style="font-size:12px;opacity:.8;margin-top:2px">${atrasados.length} cliente${atrasados.length!==1?'s':''} em atraso</div>
@@ -366,7 +371,6 @@ function bAtraso(){
 function bManutencao(){
   const manutencao = (S.clientes||[]).filter(c=>c.emManutencao);
   return `<div class="ct">
-    ${bPipelineTabs()}
     <div style="background:linear-gradient(135deg,#2980b9,#1a5276);border-radius:var(--r);padding:16px;margin-bottom:16px;color:white">
       <div style="font-size:14px;font-weight:800">🔧 Manutenção</div>
       <div style="font-size:12px;opacity:.8;margin-top:2px">${manutencao.length} cliente${manutencao.length!==1?'s':''} em manutenção</div>
@@ -666,7 +670,6 @@ function bPipeline(){
     .sort((a,b)=>(emAlerta(b)?1:0)-(emAlerta(a)?1:0));
 
   return`<div class="ct">
-  ${bPipelineTabs()}
   ${alertas.length?`<div class="alert-ban">
     <span>⚠️</span>
     <span class="alert-ban-txt">${alertas.length} cliente${alertas.length>1?'s precisam':'precisa'} de follow-up urgente</span>
