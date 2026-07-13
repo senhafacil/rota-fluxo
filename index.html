@@ -568,13 +568,6 @@ function bBottomNav(){
     <button class="bnav-item ${S.view==='templates'?'on':''}" onclick="sv('templates')">
       <span class="bnav-ico">💬</span><span class="bnav-lbl">Templates</span>
     </button>
-    <button class="bnav-item ${S.view==='atraso'?'on':''}" onclick="sv('atraso')">
-      <span class="bnav-ico">⏰</span><span class="bnav-lbl">Atrasos</span>
-      ${(S.clientes||[]).filter(c=>c.emAtraso).length?`<span class="badge-nav">${(S.clientes||[]).filter(c=>c.emAtraso).length}</span>`:''}
-    </button>
-    <button class="bnav-item ${S.view==='manutencao'?'on':''}" onclick="sv('manutencao')">
-      <span class="bnav-ico">🔧</span><span class="bnav-lbl">Manutenção</span>
-      ${(S.clientes||[]).filter(c=>c.emManutencao).length?`<span class="badge-nav">${(S.clientes||[]).filter(c=>c.emManutencao).length}</span>`:''}
     </button>
     ${USUARIO_LOGADO?.isAdmin
       ? `<button class="bnav-item ${S.view==='admin'?'on':''}" onclick="sv('admin')">
